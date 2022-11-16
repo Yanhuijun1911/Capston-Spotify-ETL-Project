@@ -1,0 +1,128 @@
+
+-- create tables in SQL
+-- the track_name choose the biggest value as some of the track names are too long
+-- create the my_artists_DIM first as the PK will be used as FK in other DIM tables
+-- then create other fact tables as the PKs are the same PKs in the DIM table connected
+-- next grant the access
+-- test if the tables could be joined together
+
+
+
+CREATE TABLE de_challenge.my_artists_DIM(
+    artist_key VARCHAR(100) NOT NULL,
+    artist_url VARCHAR(100) NOT NULL,
+    artist_name VARCHAR(50) NOT NULL,
+    genres VARCHAR(100) NOT NULL,
+    PRIMARY KEY(artist_key)
+);
+
+
+CREATE TABLE de_challenge.toptracks_DIM(
+    toptrack_key VARCHAR(100) NOT NULL,
+    track_url VARCHAR(100) NOT NULL,
+    track_name VARCHAR(255) NOT NULL,
+    artist_key VARCHAR(100) NOT NULL,
+    PRIMARY KEY(toptrack_key),
+    FOREIGN KEY(artist_key) 
+    REFERENCES
+        de_challenge.my_artists_DIM(artist_key)
+);
+
+CREATE TABLE de_challenge.listtracks_DIM(
+    listtrack_key VARCHAR(100) NOT NULL,
+    track_url VARCHAR(100) NOT NULL,
+    track_name VARCHAR(255) NOT NULL,
+    artist_key VARCHAR(100) NOT NULL,
+    PRIMARY KEY(listtrack_key),
+    FOREIGN KEY(artist_key) 
+    REFERENCES
+        de_challenge.my_artists_DIM(artist_key)
+);
+
+CREATE TABLE de_challenge.toptracks_popularity_fact(
+    toptrack_key VARCHAR(100) NOT NULL,
+    track_popularity INT NOT NULL,
+    PRIMARY KEY(toptrack_key),
+    FOREIGN KEY(toptrack_key) 
+    REFERENCES
+        de_challenge.toptracks_DIM(toptrack_key)
+);
+
+CREATE TABLE de_challenge.listtracks_features_fact(
+    listtrack_key VARCHAR(100) NOT NULL,
+    track_popularity INT NOT NULL,
+    danceability FLOAT NOT NULL,
+    energy FLOAT NOT NULL,
+    track_key INT NOT NULL,
+    loudness FLOAT NOT NULL,
+    track_mode INT NOT NULL,
+    speechiness FLOAT NOT NULL,
+    acousticness FLOAT NOT NULL,
+    instrumentalness FLOAT NOT NULL,
+    liveness FLOAT NOT NULL,
+    valence FLOAT NOT NULL,
+    tempo FLOAT NOT NULL,
+    duration_ms INT NOT NULL,
+    
+    PRIMARY KEY(listtrack_key),
+    FOREIGN KEY(listtrack_key) 
+    REFERENCES
+        de_challenge.listtracks_DIM(listtrack_key)
+);
+
+CREATE TABLE de_challenge.artists_features_fact(
+    artist_key VARCHAR(100) NOT NULL,
+    followers INT NOT NULL,
+    artist_popularity INT NOT NULL,
+    
+    PRIMARY KEY(artist_key),
+    FOREIGN KEY(artist_key) 
+    REFERENCES
+        de_challenge.my_artists_DIM(artist_key)
+);
+
+
+
+------------GRANT ACCESS---------------
+GRANT ALL on TABLE  
+    de_challenge.my_artists_DIM,
+    de_challenge.artists_features_fact,
+    de_challenge.listtracks_DIM,
+    de_challenge.listtracks_features_fact,
+    de_challenge.toptracks_DIM,
+    de_challenge.toptracks_popularity_fact
+    to "DF_Student";
+
+---------------------------------------
+
+------------user test------------------
+
+SELECT * 
+FROM 
+    de_challenge.my_artists_DIM;
+    
+SELECT count(*) 
+FROM 
+    de_challenge.artists_features_fact;
+
+SELECT count(*) 
+FROM 
+    de_challenge.listtracks_DIM;
+
+SELECT count(*) 
+FROM 
+    de_challenge.listtracks_features_fact;
+
+SELECT count(*) 
+FROM
+    de_challenge.toptracks_DIM;
+
+SELECT count(*) 
+FROM
+    de_challenge.toptracks_popularity_fact;
+
+
+SELECT *
+FROM de_challenge.my_artists_DIM
+LEFT JOIN de_challenge.listtracks_DIM 
+on de_challenge.my_artists_DIM.artist_key = de_challenge.listtracks_DIM.artist_key;
